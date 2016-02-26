@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="1.0" xmlns="http://www.loc.gov/mods/v3" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:marc="http://www.loc.gov/MARC21/slim" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" exclude-result-prefixes="xlink marc">
+<xsl:stylesheet version="1.0" xmlns="http://www.loc.gov/mods/v3" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:marc="http://www.loc.gov/MARC21/slim" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" exclude-result-prefixes="xlink marc">
 	<xsl:include href="MARC21slimUtils.xsl"/>
 	<xsl:output method="xml" indent="yes" encoding="UTF-8"/>
+
+<!-- Boston College's customized version of default MarcEdit XSLT for eScholarship@BC; some issues with mapping, should either be updated or use standard LOC mapping instead? -->
 
 <!--
 Revision 1.9 subfield $y was added to field 242 2004/09/02 10:57 jrad
@@ -26,20 +28,20 @@ Added Log Comment
 	<xsl:template match="/">
 		<xsl:choose>
 			<xsl:when test="marc:collection">
-				<modsCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-0.xsd">
+			    <mods:modsCollection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-4.xsd">
 					<xsl:for-each select="marc:collection/marc:record">
-						<mods version="3.0">
+						<mods:mods>
 							<xsl:call-template name="marcRecord"/>
-						</mods>
+						</mods:mods>
 					</xsl:for-each>
-				</modsCollection>
+				</mods:modsCollection>
 			</xsl:when>
 			<xsl:otherwise>
-				<mods version="3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-0.xsd">
+			    <mods:mods xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-4.xsd" version="3.4">
 					<xsl:for-each select="marc:record">
 						<xsl:call-template name="marcRecord"/>
 					</xsl:for-each>
-				</mods>
+				</mods:mods>
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
@@ -67,7 +69,10 @@ Added Log Comment
 		</xsl:variable>
 
 		<xsl:for-each select="marc:datafield[@tag=245]">
-			<titleInfo>
+			<mods:titleInfo>
+                <xsl:attribute name="usage">
+                    <xsl:text>primary</xsl:text>
+                </xsl:attribute>
 				<xsl:variable name="title">
 					<xsl:choose>
 						<xsl:when test="marc:subfield[@code='b']">
@@ -93,21 +98,21 @@ Added Log Comment
 				</xsl:variable>
 				<xsl:choose>
 					<xsl:when test="@ind2&gt;0">
-						<nonSort>
+						<mods:nonSort>
 							<xsl:value-of select="substring($titleChop,1,@ind2)"/>
-						</nonSort>
-						<title>
+						</mods:nonSort>
+						<mods:title>
 							<xsl:value-of select="substring($titleChop,@ind2+1)"/>
-						</title>
+						</mods:title>
 					</xsl:when>
 					<xsl:otherwise>
-						<title>
+						<mods:title>
 							<xsl:value-of select="$titleChop"/>
-						</title>
+						</mods:title>
 					</xsl:otherwise>
 				</xsl:choose>
 				<xsl:if test="marc:subfield[@code='b']">
-					<subTitle>
+					<mods:subTitle>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:call-template name="specialSubfieldSelect">
@@ -117,15 +122,15 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</subTitle>
+					</mods:subTitle>
 				</xsl:if>
 				<xsl:call-template name="part"/>
-			</titleInfo>
+			</mods:titleInfo>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=210]">
-			<titleInfo type="abbreviated">
-				<title>
+			<mods:titleInfo type="abbreviated">
+				<mods:title>
 					<xsl:call-template name="chopPunctuation">
 						<xsl:with-param name="chopString">
 							<xsl:call-template name="subfieldSelect">
@@ -133,47 +138,44 @@ Added Log Comment
 							</xsl:call-template>
 						</xsl:with-param>
 					</xsl:call-template>
-				</title>
+				</mods:title>
 				<xsl:call-template name="subtitle"/>
-			</titleInfo>
+			</mods:titleInfo>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=242]">
-			<titleInfo type="translated">
+			<mods:titleInfo type="translated">
 			<!--09/01/04 Added subfield $y-->
 			<xsl:for-each select="marc:subfield[@code='y']">
 					<xsl:attribute name="lang">
 						<xsl:value-of select="text()"/>
 					</xsl:attribute>
 					</xsl:for-each>
-			<title>
-			
-					<xsl:call-template name="chopPunctuation">
-						<xsl:with-param name="chopString">
-							<xsl:call-template name="subfieldSelect">
-								<!-- 1/04 removed $h, b -->
-								<xsl:with-param name="codes">a</xsl:with-param>
-							</xsl:call-template>
-						</xsl:with-param>
-					</xsl:call-template>
-					
-				</title>
-				
+			    <mods:title>		
+			        <xsl:call-template name="chopPunctuation">
+			            <xsl:with-param name="chopString">
+			                <xsl:call-template name="subfieldSelect">
+			                    <!-- 1/04 removed $h, b -->
+			                    <xsl:with-param name="codes">a</xsl:with-param>
+			                </xsl:call-template>
+			            </xsl:with-param>
+			        </xsl:call-template>	
+			    </mods:title>
 				
 				<!-- 1/04 fix -->
 				<xsl:call-template name="subtitle"/>
 				<xsl:call-template name="part"/>
-			</titleInfo>
+			</mods:titleInfo>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=246]">
-			<titleInfo type="alternative">
+			<mods:titleInfo type="alternative">
 				<xsl:for-each select="marc:subfield[@code='i']">
 					<xsl:attribute name="displayLabel">
 						<xsl:value-of select="text()"/>
 					</xsl:attribute>
 				</xsl:for-each>
-				<title>
+				<mods:title>
 					<xsl:call-template name="chopPunctuation">
 						<xsl:with-param name="chopString">
 							<xsl:call-template name="subfieldSelect">
@@ -182,15 +184,15 @@ Added Log Comment
 							</xsl:call-template>
 						</xsl:with-param>
 					</xsl:call-template>
-				</title>
+				</mods:title>
 				<xsl:call-template name="subtitle"/>
 				<xsl:call-template name="part"/>
-			</titleInfo>
+			</mods:titleInfo>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=130]|marc:datafield[@tag=240]|marc:datafield[@tag=730][@ind2!=2]">
-			<titleInfo type="uniform">
-				<title>
+			<mods:titleInfo type="uniform">
+				<mods:title>
 					<xsl:variable name="str">
 						<xsl:for-each select="marc:subfield">
 							<xsl:if test="(contains('adfklmor',@code) and (not(../marc:subfield[@code='n' or @code='p']) or (following-sibling::marc:subfield[@code='n' or @code='p'])))">
@@ -205,14 +207,14 @@ Added Log Comment
 							<xsl:value-of select="substring($str,1,string-length($str)-1)"/>
 						</xsl:with-param>
 					</xsl:call-template>
-				</title>
+				</mods:title>
 				<xsl:call-template name="part"/>
-			</titleInfo>
+			</mods:titleInfo>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=740][@ind2!=2]">
-			<titleInfo type="alternative">
-				<title>
+			<mods:titleInfo type="alternative">
+				<mods:title>
 					<xsl:call-template name="chopPunctuation">
 						<xsl:with-param name="chopString">
 							<xsl:call-template name="subfieldSelect">
@@ -220,79 +222,70 @@ Added Log Comment
 							</xsl:call-template>
 						</xsl:with-param>
 					</xsl:call-template>
-				</title>
+				</mods:title>
 				<xsl:call-template name="part"/>
-			</titleInfo>
+			</mods:titleInfo>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=100]">
-			<name type="personal">
+			<mods:name type="personal" usage="primary">
 				<xsl:call-template name="nameABCDQ"/>
-				<xsl:call-template name="affiliation"/>
-				<role>
-					<roleTerm authority="marcrelator" type="text">creator</roleTerm>
-				</role>
+				<xsl:call-template name="affiliation"/>       
 				<xsl:call-template name="role"/>
-			</name>
+			</mods:name>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=110]">
-			<name type="corporate">
+		    <mods:name type="corporate" usage="primary">
 				<xsl:call-template name="nameABCDN"/>
-				<role>
-					<roleTerm authority="marcrelator" type="text">creator</roleTerm>
-				</role>
-				<xsl:call-template name="role"/>
-			</name>
+		        <xsl:call-template name="role"/>
+			</mods:name>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=111]">
-			<name type="conference">
+		    <mods:name type="conference" usage="primary">
 				<xsl:call-template name="nameACDEQ"/>
-				<role>
-					<roleTerm authority="marcrelator" type="text">creator</roleTerm>
-				</role>
 				<xsl:call-template name="role"/>
-			</name>
+			</mods:name>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=700][not(marc:subfield[@code='t'])]">
-			<name type="personal">
+			<mods:name type="personal">
 				<xsl:call-template name="nameABCDQ"/>
 				<xsl:call-template name="affiliation"/>
 				<xsl:call-template name="role"/>
-			</name>
+			</mods:name>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=710][not(marc:subfield[@code='t'])]">
-			<name type="corporate">
+			<mods:name type="corporate">
 				<xsl:call-template name="nameABCDN"/>
 				<xsl:call-template name="role"/>
-			</name>
+			</mods:name>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=711][not(marc:subfield[@code='t'])]">
-			<name type="conference">
+			<mods:name type="conference">
 				<xsl:call-template name="nameACDEQ"/>
 				<xsl:call-template name="role"/>
-			</name>
+			</mods:name>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=720][not(marc:subfield[@code='t'])]">
-			<name>
+			<mods:name>
 				<xsl:if test="@ind1=1">
 					<xsl:attribute name="type">
 						<xsl:text>personal</xsl:text>
 					</xsl:attribute>
 				</xsl:if>
-				<namePart>
+				<mods:namePart>
 					<xsl:value-of select="marc:subfield[@code='a']"/>
-				</namePart>
+				</mods:namePart>
 				<xsl:call-template name="role"/>
-			</name>
+			</mods:name>
 		</xsl:for-each>
 
-		<typeOfResource>
+		<mods:typeOfResource>
 			<xsl:if test="$leader7='c'">
 				<xsl:attribute name="collection">yes</xsl:attribute>
 			</xsl:if>
@@ -311,24 +304,24 @@ Added Log Comment
 				<xsl:when test="$leader6='m'">software, multimedia</xsl:when>
 				<xsl:when test="$leader6='p'">mixed material</xsl:when>
 			</xsl:choose>
-		</typeOfResource>
+		</mods:typeOfResource>
 
 		<xsl:if test="substring($controlField008,26,1)='d'">
-			<genre authority="marc">globe</genre>
+			<mods:genre authority="marcgt">globe</mods:genre>
 		</xsl:if>
 
 		<xsl:if test="marc:controlfield[@tag=007][substring(text(),1,1)='a'][substring(text(),2,1)='r']">
-			<genre authority="marc">remote sensing image</genre>
+		    <mods:genre authority="marcgt">remote sensing image</mods:genre>
 		</xsl:if>
 
 		<xsl:if test="$typeOf008='MP'">
 			<xsl:variable name="controlField008-25" select="substring($controlField008,26,1)"/>
 			<xsl:choose>
 				<xsl:when test="$controlField008-25='a' or $controlField008-25='b' or $controlField008-25='c' or marc:controlfield[@tag=007][substring(text(),1,1)='a'][substring(text(),2,1)='j']">
-					<genre authority="marc">map</genre>
+				    <mods:genre authority="marcgt">map</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-25='e' or marc:controlfield[@tag=007][substring(text(),1,1)='a'][substring(text(),2,1)='d']">
-					<genre authority="marc">atlas</genre>
+				    <mods:genre authority="marcgt">atlas</mods:genre>
 				</xsl:when>
 			</xsl:choose>
 		</xsl:if>
@@ -337,97 +330,101 @@ Added Log Comment
 			<xsl:variable name="controlField008-21" select="substring($controlField008,22,1)"/>
 			<xsl:choose>
 				<xsl:when test="$controlField008-21='d'">
-					<genre authority="marc">database</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">database</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-21='l'">
-					<genre authority="marc">loose-leaf</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">loose-leaf</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-21='m'">
-					<genre authority="marc">series</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">series</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-21='n'">
-					<genre authority="marc">newspaper</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">newspaper</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-21='p'">
-					<genre authority="marc">periodical</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">periodical</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-21='w'">
-					<genre authority="marc">web site</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">web site</mods:genre>
 				</xsl:when>
 			</xsl:choose>
 		</xsl:if>
+
+	    <xsl:if test="(($typeOf008='BK') and ($leader6='a' ))">
+	        <mods:genre authority="marcgt" type="work type" usage="primary">book</mods:genre>
+	    </xsl:if>
 
 		<xsl:if test="$typeOf008='BK' or $typeOf008='SE'">
 			<xsl:variable name="controlField008-24" select="substring($controlField008,25,4)"/>
 			<xsl:choose>
 				<xsl:when test="contains($controlField008-24,'a')">
-					<genre authority="marc">abstract or summary</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">abstract or summary</mods:genre>
 				</xsl:when>
-				<xsl:when test="contains($controlField008-24,'b')">
-					<genre authority="marc">bibliography</genre>
-				</xsl:when>
+				<!-- <xsl:when test="contains($controlField008-24,'b')">
+				    <mods:genre authority="marcgt" type="work type" usage="primary">bibliography</mods:genre>
+				</xsl:when> -->
 				<xsl:when test="contains($controlField008-24,'c')">
-					<genre authority="marc">catalog</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">catalog</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'d')">
-					<genre authority="marc">dictionary</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">dictionary</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'e')">
-					<genre authority="marc">encyclopedia</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">encyclopedia</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'f')">
-					<genre authority="marc">handbook</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">handbook</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'g')">
-					<genre authority="marc">legal article</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">legal article</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'i')">
-					<genre authority="marc">index</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">index</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'k')">
-					<genre authority="marc">discography</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">discography</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'l')">
-					<genre authority="marc">legislation</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">legislation</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'m')">
-					<genre authority="marc">theses</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">theses</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'n')">
-					<genre authority="marc">survey of literature</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">survey of literature</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'o')">
-					<genre authority="marc">review</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">review</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'p')">
-					<genre authority="marc">programmed text</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">programmed text</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'q')">
-					<genre authority="marc">filmography</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">filmography</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'r')">
-					<genre authority="marc">directory</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">directory</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'s')">
-					<genre authority="marc">statistics</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">statistics</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'t')">
-					<genre authority="marc">technical report</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">technical report</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'v')">
-					<genre authority="marc">legal case and case notes</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">legal case and case notes</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'w')">
-					<genre authority="marc">law report or digest</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">law report or digest</mods:genre>
 				</xsl:when>
 				<xsl:when test="contains($controlField008-24,'z')">
-					<genre authority="marc">treaty</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">treaty</mods:genre>
 				</xsl:when>
 			</xsl:choose>
 			<xsl:variable name="controlField008-29" select="substring($controlField008,30,1)"/>
 			<xsl:choose>
 				<xsl:when test="$controlField008-29='1'">
-					<genre authority="marc">conference publication</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">conference publication</mods:genre>
 				</xsl:when>
 			</xsl:choose>
 		</xsl:if>
@@ -436,61 +433,61 @@ Added Log Comment
 			<xsl:variable name="controlField008-26" select="substring($controlField008,27,1)"/>
 			<xsl:choose>
 				<xsl:when test="$controlField008-26='a'">
-					<genre authority="marc">numeric data</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">numeric data</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-26='e'">
-					<genre authority="marc">database</genre>
+				    <mods:genre authority="marcgt" type="work type" usage="primary">database</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-26='f'">
-					<genre authority="marc">font</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">font</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-26='g'">
-					<genre authority="marc">game</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">game</mods:genre>
 				</xsl:when>
 			</xsl:choose>
 		</xsl:if>
 
 		<xsl:if test="$typeOf008='BK'">
 			<xsl:if test="substring($controlField008,25,1)='j'">
-				<genre authority="marc">patent</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">patent</mods:genre>
 			</xsl:if>
 			<xsl:if test="substring($controlField008,31,1)='1'">
-				<genre authority="marc">festschrift</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">festschrift</mods:genre>
 			</xsl:if>
 
 			<xsl:variable name="controlField008-34" select="substring($controlField008,35,1)"/>
 			<xsl:if test="$controlField008-34='a' or $controlField008-34='b' or $controlField008-34='c' or $controlField008-34='d'">
-				<genre authority="marc">biography</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">biography</mods:genre>
 			</xsl:if>
 
 			<xsl:variable name="controlField008-33" select="substring($controlField008,34,1)"/>
 			<xsl:choose>
 				<xsl:when test="$controlField008-33='e'">
-					<genre authority="marc">essay</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">essay</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='d'">
-					<genre authority="marc">drama</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">drama</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='c'">
-					<genre authority="marc">comic strip</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">comic strip</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='l'">
-					<genre authority="marc">fiction</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">fiction</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='h'">
-					<genre authority="marc">humor, satire</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">humor, satire</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='i'">
-					<genre authority="marc">letter</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">letter</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='f'">
-					<genre authority="marc">novel</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">novel</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='j'">
-					<genre authority="marc">short story</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">short story</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='s'">
-					<genre authority="marc">speech</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">speech</mods:genre>
 				</xsl:when>
 			</xsl:choose>
 		</xsl:if>
@@ -498,46 +495,46 @@ Added Log Comment
 		<xsl:if test="$typeOf008='MU'">
 			<xsl:variable name="controlField008-30-31" select="substring($controlField008,31,2)"/>
 			<xsl:if test="contains($controlField008-30-31,'b')">
-				<genre authority="marc">biography</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">biography</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'c')">
-				<genre authority="marc">conference publication</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">conference publication</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'d')">
-				<genre authority="marc">drama</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">drama</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'e')">
-				<genre authority="marc">essay</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">essay</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'f')">
-				<genre authority="marc">fiction</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">fiction</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'o')">
-				<genre authority="marc">folktale</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">folktale</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'h')">
-				<genre authority="marc">history</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">history</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'k')">
-				<genre authority="marc">humor, satire</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">humor, satire</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'m')">
-				<genre authority="marc">memoir</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">memoir</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'p')">
-				<genre authority="marc">poetry</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">poetry</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'r')">
-				<genre authority="marc">rehearsal</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">rehearsal</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'g')">
-				<genre authority="marc">reporting</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">reporting</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'s')">
-				<genre authority="marc">sound</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">sound</mods:genre>
 			</xsl:if>
 			<xsl:if test="contains($controlField008-30-31,'l')">
-				<genre authority="marc">speech</genre>
+				<mods:genre authority="marcgt" type="work type" usage="primary">speech</mods:genre>
 			</xsl:if>
 		</xsl:if>
 
@@ -545,67 +542,67 @@ Added Log Comment
 			<xsl:variable name="controlField008-33" select="substring($controlField008,34,1)"/>
 			<xsl:choose>
 				<xsl:when test="$controlField008-33='a'">
-					<genre authority="marc">art original</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">art original</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='b'">
-					<genre authority="marc">kit</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">kit</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='c'">
-					<genre authority="marc">art reproduction</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">art reproduction</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='d'">
-					<genre authority="marc">diorama</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">diorama</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='f'">
-					<genre authority="marc">filmstrip</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">filmstrip</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='g'">
-					<genre authority="marc">legal article</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">legal article</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='i'">
-					<genre authority="marc">picture</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">picture</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='k'">
-					<genre authority="marc">graphic</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">graphic</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='l'">
-					<genre authority="marc">technical drawing</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">technical drawing</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='m'">
-					<genre authority="marc">motion picture</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">motion picture</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='n'">
-					<genre authority="marc">chart</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">chart</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='o'">
-					<genre authority="marc">flash card</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">flash card</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='p'">
-					<genre authority="marc">microscope slide</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">microscope slide</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='q' or marc:controlfield[@tag=007][substring(text(),1,1)='a'][substring(text(),2,1)='q']">
-					<genre authority="marc">model</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">model</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='r'">
-					<genre authority="marc">realia</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">realia</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='s'">
-					<genre authority="marc">slide</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">slide</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='t'">
-					<genre authority="marc">transparency</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">transparency</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='v'">
-					<genre authority="marc">videorecording</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">videorecording</mods:genre>
 				</xsl:when>
 				<xsl:when test="$controlField008-33='w'">
-					<genre authority="marc">toy</genre>
+					<mods:genre authority="marcgt" type="work type" usage="primary">toy</mods:genre>
 				</xsl:when>
 			</xsl:choose>
 		</xsl:if>
 
 		<xsl:for-each select="marc:datafield[@tag=655]">
-			<genre authority="marc">
+			<mods:genre type="work type">
 				<xsl:attribute name="authority">
 					<xsl:value-of select="marc:subfield[@code='2']"/>
 				</xsl:attribute>
@@ -613,35 +610,35 @@ Added Log Comment
 					<xsl:with-param name="codes">abvxyz</xsl:with-param>
 					<xsl:with-param name="delimeter">-</xsl:with-param>
 				</xsl:call-template>
-			</genre>
+			</mods:genre>
 		</xsl:for-each>
 
-		<originInfo>
+		<mods:originInfo>
 			<xsl:variable name="MARCpublicationCode" select="normalize-space(substring($controlField008,16,3))"/>
 
 			<xsl:if test="translate($MARCpublicationCode,'|','')">
-				<place>
-					<placeTerm>
+				<mods:place>
+					<mods:placeTerm>
 						<xsl:attribute name="type">code</xsl:attribute>
 						<xsl:attribute name="authority">marccountry</xsl:attribute>
 						<xsl:value-of select="$MARCpublicationCode"/>
-					</placeTerm>
-				</place>
+					</mods:placeTerm>
+				</mods:place>
 			</xsl:if>
 
 			<xsl:for-each select="marc:datafield[@tag=044]/marc:subfield[@code='c']">
-				<place>
-					<placeTerm>
+				<mods:place>
+					<mods:placeTerm>
 						<xsl:attribute name="type">code</xsl:attribute>
 						<xsl:attribute name="authority">iso3166</xsl:attribute>
 						<xsl:value-of select="."/>
-					</placeTerm>
-				</place>
+					</mods:placeTerm>
+				</mods:place>
 			</xsl:for-each>
 
-			<xsl:for-each select="marc:datafield[@tag=260]/marc:subfield[@code='a']">
-				<place>
-					<placeTerm>
+			<xsl:for-each select="marc:datafield[@tag=260 or @tag=264]/marc:subfield[@code='a']">
+				<mods:place>
+					<mods:placeTerm>
 						<xsl:attribute name="type">text</xsl:attribute>
 						<xsl:call-template name="chopPunctuationFront">
 							<xsl:with-param name="chopString">
@@ -650,56 +647,56 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</placeTerm>
-				</place>
+					</mods:placeTerm>
+				</mods:place>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:datafield[@tag=046]/marc:subfield[@code='m']">
-				<dateValid point="start">
+				<mods:dateValid point="start">
 					<xsl:value-of select="."/>
-				</dateValid>
+				</mods:dateValid>
 			</xsl:for-each>
 			<xsl:for-each select="marc:datafield[@tag=046]/marc:subfield[@code='n']">
-				<dateValid point="end">
+				<mods:dateValid point="end">
 					<xsl:value-of select="."/>
-				</dateValid>
+				</mods:dateValid>
 			</xsl:for-each>
 			<xsl:for-each select="marc:datafield[@tag=046]/marc:subfield[@code='j']">
-				<dateModified>
+				<mods:dateModified>
 					<xsl:value-of select="."/>
-				</dateModified>
+				</mods:dateModified>
 			</xsl:for-each>
 
-			<xsl:for-each select="marc:datafield[@tag=260]/marc:subfield[@code='b' or @code='c' or @code='g']">
+			<xsl:for-each select="marc:datafield[@tag=260 or @tag=264]/marc:subfield[@code='b' or @code='c' or @code='g']">
 				<xsl:choose>
 					<xsl:when test="@code='b'">
-						<publisher>
+						<mods:publisher>
 							<xsl:call-template name="chopPunctuation">
 								<xsl:with-param name="chopString" select="."/>
 								<xsl:with-param name="punctuation">
 									<xsl:text>:,;/ </xsl:text>
 								</xsl:with-param>
 							</xsl:call-template>
-						</publisher>
+						</mods:publisher>
 					</xsl:when>
 					<xsl:when test="@code='c'">
-						<dateIssued>
+						<mods:dateIssued>
 							<xsl:call-template name="chopPunctuation">
 								<xsl:with-param name="chopString" select="."/>
 							</xsl:call-template>
-						</dateIssued>
+						</mods:dateIssued>
 					</xsl:when>
 					<xsl:when test="@code='g'">
-						<dateCreated>
+						<mods:dateCreated>
 							<xsl:value-of select="."/>
-						</dateCreated>
+						</mods:dateCreated>
 					</xsl:when>
 				</xsl:choose>
 			</xsl:for-each>
 
 			<xsl:variable name="dataField260c">
 				<xsl:call-template name="chopPunctuation">
-					<xsl:with-param name="chopString" select="marc:datafield[@tag=260]/marc:subfield[@code='c']"/>
+					<xsl:with-param name="chopString" select="marc:datafield[@tag=260 or @tag=264]/marc:subfield[@code='c']"/>
 				</xsl:call-template>
 			</xsl:variable>
 
@@ -709,100 +706,100 @@ Added Log Comment
 
 			<xsl:if test="$controlField008-6='e' or $controlField008-6='p' or $controlField008-6='r' or $controlField008-6='t' or $controlField008-6='s'">
 				<xsl:if test="$controlField008-7-10 and ($controlField008-7-10 != $dataField260c)">
-					<dateIssued encoding="marc">
+					<mods:dateIssued encoding="marc">
 						<xsl:value-of select="$controlField008-7-10"/>
-					</dateIssued>
+					</mods:dateIssued>
 				</xsl:if>
 			</xsl:if>
 
 			<xsl:if test="$controlField008-6='c' or $controlField008-6='d' or $controlField008-6='i' or $controlField008-6='k' or $controlField008-6='m' or $controlField008-6='q' or $controlField008-6='u'">
 				<xsl:if test="$controlField008-7-10">
-					<dateIssued encoding="marc" point="start">
+					<mods:dateIssued encoding="marc" point="start">
 						<xsl:value-of select="$controlField008-7-10"/>
-					</dateIssued>
+					</mods:dateIssued>
 				</xsl:if>
 			</xsl:if>
 
 			<xsl:if test="$controlField008-6='c' or $controlField008-6='d' or $controlField008-6='i' or $controlField008-6='k' or $controlField008-6='m' or $controlField008-6='q' or $controlField008-6='u'">
 				<xsl:if test="$controlField008-11-14">
-					<dateIssued encoding="marc" point="end">
+					<mods:dateIssued encoding="marc" point="end">
 						<xsl:value-of select="$controlField008-11-14"/>
-					</dateIssued>
+					</mods:dateIssued>
 				</xsl:if>
 			</xsl:if>
 
 			<xsl:if test="$controlField008-6='q'">
 				<xsl:if test="$controlField008-7-10">
-					<dateIssued encoding="marc" point="start" qualifier="questionable">
+					<mods:dateIssued encoding="marc" point="start" qualifier="questionable">
 						<xsl:value-of select="$controlField008-7-10"/>
-					</dateIssued>
+					</mods:dateIssued>
 				</xsl:if>
 			</xsl:if>
 
 			<xsl:if test="$controlField008-6='q'">
 				<xsl:if test="$controlField008-11-14">
-					<dateIssued encoding="marc" point="end" qualifier="questionable">
+					<mods:dateIssued encoding="marc" point="end" qualifier="questionable">
 						<xsl:value-of select="$controlField008-11-14"/>
-					</dateIssued>
+					</mods:dateIssued>
 				</xsl:if>
 			</xsl:if>
 
 			<xsl:if test="$controlField008-6='t'">
 				<xsl:if test="$controlField008-11-14">
-					<copyrightDate encoding="marc">
+					<mods:copyrightDate encoding="marc">
 						<xsl:value-of select="$controlField008-11-14"/>
-					</copyrightDate>
+					</mods:copyrightDate>
 				</xsl:if>
 			</xsl:if>
 
 			<xsl:for-each select="marc:datafield[@tag=033][@ind1=0 or @ind1=1]/marc:subfield[@code='a']">
-				<dateCaptured encoding="iso8601">
+				<mods:dateCaptured encoding="iso8601">
 					<xsl:value-of select="."/>
-				</dateCaptured>
+				</mods:dateCaptured>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:datafield[@tag=033][@ind1=2]/marc:subfield[@code='a'][1]">
-				<dateCaptured encoding="iso8601" point="start">
+				<mods:dateCaptured encoding="iso8601" point="start">
 					<xsl:value-of select="."/>
-				</dateCaptured>
+				</mods:dateCaptured>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:datafield[@tag=033][@ind1=2]/marc:subfield[@code='a'][2]">
-				<dateCaptured encoding="iso8601" point="end">
+				<mods:dateCaptured encoding="iso8601" point="end">
 					<xsl:value-of select="."/>
-				</dateCaptured>
+				</mods:dateCaptured>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:datafield[@tag=250]/marc:subfield[@code='a']">
-				<edition>
+			    <mods:edition>
 					<xsl:value-of select="."/>
-				</edition>
+				</mods:edition>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:leader">
-				<issuance>
+			    <mods:issuance>
 					<xsl:choose>
 						<xsl:when test="$leader7='a' or $leader7='c' or $leader7='d' or $leader7='m'">monographic</xsl:when>
 						<xsl:when test="$leader7='b' or $leader7='i' or $leader7='s'">continuing</xsl:when>
 					</xsl:choose>
-				</issuance>
+				</mods:issuance>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:datafield[@tag=310]|marc:datafield[@tag=321]">
-				<frequency>
+			    <mods:frequency>
 					<xsl:call-template name="subfieldSelect">
 						<xsl:with-param name="codes">ab</xsl:with-param>
 					</xsl:call-template>
-				</frequency>
+				</mods:frequency>
 			</xsl:for-each>
-		</originInfo>
+		</mods:originInfo>
 		<xsl:variable name="controlField008-35-37" select="normalize-space(translate(substring($controlField008,36,3),'|#',''))"/>
 		<xsl:if test="$controlField008-35-37">
-			<language>
-				<languageTerm authority="iso639-2b" type="code">
+		    <mods:language>
+		        <mods:languageTerm authority="iso639-2b" type="code">
 					<xsl:value-of select="substring($controlField008,36,3)"/>
-				</languageTerm>
-			</language>
+				</mods:languageTerm>
+			</mods:language>
 		</xsl:if>
 
 		<xsl:for-each select="marc:datafield[@tag=041]">
@@ -855,7 +852,7 @@ Added Log Comment
 
 		<xsl:variable name="physicalDescription">
 			<xsl:if test="$typeOf008='CF' and marc:controlfield[@tag=007][substring(.,12,1)='a' or substring(.,12,1)='b']">
-				<digitalOrigin>reformatted digital</digitalOrigin>
+			    <mods:digitalOrigin>reformatted digital</mods:digitalOrigin>
 			</xsl:if>
 
 			<xsl:variable name="controlField008-23" select="substring($controlField008,24,1)"/>
@@ -875,142 +872,142 @@ Added Log Comment
 
 			<xsl:choose>
 				<xsl:when test="($check008-23 and $controlField008-23='f') or ($check008-29 and $controlField008-29='f')">
-					<form authority="marcform">braille</form>
+				    <mods:form authority="marcform">braille</mods:form>
 				</xsl:when>
 				<xsl:when test="($controlField008-23=' ' and ($leader6='c' or $leader6='d')) or (($typeOf008='BK' or $typeOf008='SE') and ($controlField008-23=' ' or $controlField008='r'))">
-					<form authority="marcform">print</form>
+				    <mods:form authority="marcform">print</mods:form>
 				</xsl:when>
 				<xsl:when test="$leader6 = 'm' or ($check008-23 and $controlField008-23='s') or ($check008-29 and $controlField008-29='s')">
-					<form authority="marcform">electronic</form>
+				    <mods:form authority="marcform">electronic</mods:form>
 				</xsl:when>
 				<xsl:when test="($check008-23 and $controlField008-23='b') or ($check008-29 and $controlField008-29='b')">
-					<form authority="marcform">microfiche</form>
+				    <mods:form authority="marcform">microfiche</mods:form>
 				</xsl:when>
 				<xsl:when test="($check008-23 and $controlField008-23='a') or ($check008-29 and $controlField008-29='a')">
-					<form authority="marcform">microfilm</form>
+				    <mods:form authority="marcform">microfilm</mods:form>
 				</xsl:when>
 			</xsl:choose>
 			<!-- 1/04 fix -->
 			<xsl:if test="marc:datafield[@tag=130]/marc:subfield[@code='h']">
-				<form authority="gmd">
+			    <mods:form authority="gmd">
 					<xsl:call-template name="chopBrackets">
 						<xsl:with-param name="chopString">
 							<xsl:value-of select="marc:datafield[@tag=130]/marc:subfield[@code='h']"/>
 						</xsl:with-param>
 					</xsl:call-template>
-				</form>
+				</mods:form>
 			</xsl:if>
 
 			<xsl:if test="marc:datafield[@tag=240]/marc:subfield[@code='h']">
-				<form authority="gmd">
+			    <mods:form authority="gmd">
 					<xsl:call-template name="chopBrackets">
 						<xsl:with-param name="chopString">
 							<xsl:value-of select="marc:datafield[@tag=240]/marc:subfield[@code='h']"/>
 						</xsl:with-param>
 					</xsl:call-template>
-				</form>
+				</mods:form>
 			</xsl:if>
 			<xsl:if test="marc:datafield[@tag=242]/marc:subfield[@code='h']">
-				<form authority="gmd">
+			    <mods:form authority="gmd">
 					<xsl:call-template name="chopBrackets">
 						<xsl:with-param name="chopString">
 							<xsl:value-of select="marc:datafield[@tag=242]/marc:subfield[@code='h']"/>
 						</xsl:with-param>
 					</xsl:call-template>
-				</form>
+				</mods:form>
 			</xsl:if>
 			<xsl:if test="marc:datafield[@tag=245]/marc:subfield[@code='h']">
-				<form authority="gmd">
+			    <mods:form authority="gmd">
 					<xsl:call-template name="chopBrackets">
 						<xsl:with-param name="chopString">
 							<xsl:value-of select="marc:datafield[@tag=245]/marc:subfield[@code='h']"/>
 						</xsl:with-param>
 					</xsl:call-template>
-				</form>
+				</mods:form>
 			</xsl:if>
 			<xsl:if test="marc:datafield[@tag=246]/marc:subfield[@code='h']">
-				<form authority="gmd">
+			    <mods:form authority="gmd">
 					<xsl:call-template name="chopBrackets">
 						<xsl:with-param name="chopString">
 							<xsl:value-of select="marc:datafield[@tag=246]/marc:subfield[@code='h']"/>
 						</xsl:with-param>
 					</xsl:call-template>
-				</form>
+				</mods:form>
 			</xsl:if>
 			<xsl:if test="marc:datafield[@tag=730]/marc:subfield[@code='h']">
-				<form authority="gmd">
+			    <mods:form authority="gmd">
 					<xsl:call-template name="chopBrackets">
 						<xsl:with-param name="chopString">
 							<xsl:value-of select="marc:datafield[@tag=730]/marc:subfield[@code='h']"/>
 						</xsl:with-param>
 					</xsl:call-template>
-				</form>
+				</mods:form>
 			</xsl:if>
 			<xsl:for-each select="marc:datafield[@tag=256]/marc:subfield[@code='a']">
-				<form>
+			    <mods:form>
 					<xsl:value-of select="."/>
-				</form>
+				</mods:form>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:controlfield[@tag=007][substring(text(),1,1)='c']">
 				<xsl:choose>
 					<xsl:when test="substring(text(),14,1)='a'">
-						<reformattingQuality>access</reformattingQuality>
+					    <mods:reformattingQuality>access</mods:reformattingQuality>
 					</xsl:when>
 					<xsl:when test="substring(text(),14,1)='p'">
-						<reformattingQuality>preservation</reformattingQuality>
+					    <mods:reformattingQuality>preservation</mods:reformattingQuality>
 					</xsl:when>
 					<xsl:when test="substring(text(),14,1)='r'">
-						<reformattingQuality>replacement</reformattingQuality>
+					    <mods:reformattingQuality>replacement</mods:reformattingQuality>
 					</xsl:when>
 				</xsl:choose>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:datafield[@tag=856]/marc:subfield[@code='q'][string-length(.)&gt;1]">
-				<internetMediaType>
+			    <mods:internetMediaType>
 					<xsl:value-of select="."/>
-				</internetMediaType>
+				</mods:internetMediaType>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:datafield[@tag=300]">
-				<extent>
+			    <mods:extent>
 					<xsl:call-template name="subfieldSelect">
 						<xsl:with-param name="codes">abce</xsl:with-param>
 					</xsl:call-template>
-				</extent>
+				</mods:extent>
 			</xsl:for-each>
 		</xsl:variable>
 
 		<xsl:if test="string-length(normalize-space($physicalDescription))">
-			<physicalDescription>
+		    <mods:physicalDescription>
 				<xsl:copy-of select="$physicalDescription"/>
-			</physicalDescription>
+			</mods:physicalDescription>
 		</xsl:if>
 
 		<xsl:for-each select="marc:datafield[@tag=520]">
-			<abstract>
+		    <mods:abstract>
 				<xsl:call-template name="uri"/>
 				<xsl:call-template name="subfieldSelect">
 					<xsl:with-param name="codes">ab</xsl:with-param>
 				</xsl:call-template>
-			</abstract>
+			</mods:abstract>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=505]">
-			<tableOfContents>
+		    <mods:tableOfContents>
 				<xsl:call-template name="uri"/>
 				<xsl:call-template name="subfieldSelect">
 					<xsl:with-param name="codes">agrt</xsl:with-param>
 				</xsl:call-template>
-			</tableOfContents>
+			</mods:tableOfContents>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=521]">
-			<targetAudience>
+		    <mods:targetAudience>
 				<xsl:call-template name="subfieldSelect">
 					<xsl:with-param name="codes">ab</xsl:with-param>
 				</xsl:call-template>
-			</targetAudience>
+			</mods:targetAudience>
 		</xsl:for-each>
 
 		<xsl:if test="$typeOf008='BK' or $typeOf008='CF' or $typeOf008='MU' or $typeOf008='VM'">
@@ -1018,55 +1015,61 @@ Added Log Comment
 			<xsl:choose>
 				<!-- 01/04 fix -->
 				<xsl:when test="$controlField008-22='d'">
-					<targetAudience authority="marctarget">adolescent</targetAudience>
+				    <mods:targetAudience authority="marctarget">adolescent</mods:targetAudience>
 				</xsl:when>
 				<xsl:when test="$controlField008-22='e'">
-					<targetAudience authority="marctarget">adult</targetAudience>
+				    <mods:targetAudience authority="marctarget">adult</mods:targetAudience>
 				</xsl:when>
 				<xsl:when test="$controlField008-22='g'">
-					<targetAudience authority="marctarget">general</targetAudience>
+				    <mods:targetAudience authority="marctarget">general</mods:targetAudience>
 				</xsl:when>
 				<xsl:when test="$controlField008-22='b' or $controlField008-22='c' or $controlField008-22='j'">
-					<targetAudience authority="marctarget">juvenile</targetAudience>
+				    <mods:targetAudience authority="marctarget">juvenile</mods:targetAudience>
 				</xsl:when>
 				<xsl:when test="$controlField008-22='a'">
-					<targetAudience authority="marctarget">preschool</targetAudience>
+				    <mods:targetAudience authority="marctarget">preschool</mods:targetAudience>
 				</xsl:when>
 				<xsl:when test="$controlField008-22='f'">
-					<targetAudience authority="marctarget">specialized</targetAudience>
+				    <mods:targetAudience authority="marctarget">specialized</mods:targetAudience>
 				</xsl:when>
 			</xsl:choose>
 		</xsl:if>
 
 		<xsl:for-each select="marc:datafield[@tag=245]/marc:subfield[@code='c']">
-			<note type="statement of responsibility">
+		    <mods:note type="statement of responsibility">
 				<xsl:value-of select="."/>
-			</note>
+			</mods:note>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=500]">
-			<note>
+		    <mods:note>
 				<xsl:value-of select="marc:subfield[@code='a']"/>
 				<xsl:call-template name="uri"/>
-			</note>
+			</mods:note>
 		</xsl:for-each>
 
+	    <xsl:for-each select="marc:datafield[@tag=504]">
+	        <mods:note type="bibliography">
+	            <xsl:value-of select="."/>
+	        </mods:note>
+	    </xsl:for-each>
+
 		<xsl:for-each select="marc:datafield[@tag=511]">
-			<note type="performers">
+		    <mods:note type="performers">
 				<xsl:call-template name="uri"/>
 				<xsl:value-of select="marc:subfield[@code='a']"/>
-			</note>
+			</mods:note>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=518]">
-			<note type="venue">
+		    <mods:note type="venue">
 				<xsl:call-template name="uri"/>
 				<xsl:value-of select="marc:subfield[@code='a']"/>
-			</note>
+			</mods:note>
 		</xsl:for-each>
 
-		<xsl:for-each select="marc:datafield[@tag=501 or @tag=502 or @tag=504 or @tag=506 or @tag=507 or @tag=508 or  @tag=513 or @tag=514 or @tag=515 or @tag=516 or @tag=522 or @tag=524 or @tag=525 or @tag=526 or @tag=530 or @tag=533 or @tag=534 or @tag=535 or @tag=536 or @tag=538 or @tag=540 or @tag=541 or @tag=544 or @tag=545 or @tag=546 or @tag=547 or @tag=550 or @tag=552 or @tag=555 or @tag=556 or @tag=561 or @tag=562 or @tag=565 or @tag=567 or @tag=580 or @tag=581 or @tag=583 or @tag=584 or @tag=585 or @tag=586]">
-			<note>
+		<xsl:for-each select="marc:datafield[@tag=501 or @tag=502 or @tag=506 or @tag=507 or @tag=508 or  @tag=513 or @tag=514 or @tag=515 or @tag=516 or @tag=522 or @tag=524 or @tag=525 or @tag=526 or @tag=530 or @tag=533 or @tag=534 or @tag=535 or @tag=536 or @tag=538 or @tag=540 or @tag=541 or @tag=544 or @tag=545 or @tag=546 or @tag=547 or @tag=550 or @tag=552 or @tag=555 or @tag=556 or @tag=561 or @tag=562 or @tag=565 or @tag=567 or @tag=580 or @tag=581 or @tag=583 or @tag=584 or @tag=585 or @tag=586]">
+		    <mods:note>
 				<xsl:call-template name="uri"/>
 				<xsl:variable name="str">
 					<xsl:for-each select="marc:subfield[@code!='6' or @code!='8']">
@@ -1075,25 +1078,25 @@ Added Log Comment
 					</xsl:for-each>
 				</xsl:variable>
 				<xsl:value-of select="substring($str,1,string-length($str)-1)"/>
-			</note>
+			</mods:note>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=034][marc:subfield[@code='d' or @code='e' or @code='f' or @code='g']]">
-			<subject>
-				<cartographics>
-					<coordinates>
+		    <mods:subject>
+		        <mods:cartographics>
+		            <mods:coordinates>
 						<xsl:call-template name="subfieldSelect">
 							<xsl:with-param name="codes">defg</xsl:with-param>
 						</xsl:call-template>
-					</coordinates>
-				</cartographics>
-			</subject>
+					</mods:coordinates>
+				</mods:cartographics>
+			</mods:subject>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=043]">
-			<subject>
+		    <mods:subject>
 				<xsl:for-each select="marc:subfield[@code='a' or @code='b' or @code='c']">
-					<geographicCode>
+				    <mods:geographicCode>
 						<xsl:attribute name="authority">
 							<xsl:if test="@code='a'">
 								<xsl:text>marcgac</xsl:text>
@@ -1106,31 +1109,31 @@ Added Log Comment
 							</xsl:if>
 						</xsl:attribute>
 						<xsl:value-of select="self::marc:subfield"/>
-					</geographicCode>
+					</mods:geographicCode>
 				</xsl:for-each>
-			</subject>
+			</mods:subject>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=255]">
-			<subject>
-				<cartographics>
+		    <mods:subject>
+		        <mods:cartographics>
 					<xsl:for-each select="marc:subfield[@code='c']">
-						<coordinates>
+					    <mods:coordinates>
 							<xsl:value-of select="."/>
-						</coordinates>
+						</mods:coordinates>
 					</xsl:for-each>
 					<xsl:for-each select="marc:subfield[@code='a']">
-						<scale>
+					    <mods:scale>
 							<xsl:value-of select="."/>
-						</scale>
+						</mods:scale>
 					</xsl:for-each>
 					<xsl:for-each select="marc:subfield[@code='b']">
-						<projection>
+					    <mods:projection>
 							<xsl:value-of select="."/>
-						</projection>
+						</mods:projection>
 					</xsl:for-each>
-				</cartographics>
-			</subject>
+				</mods:cartographics>
+			</mods:subject>
 		</xsl:for-each>
 
 		<xsl:apply-templates select="marc:datafield[653 &gt;= @tag and @tag &gt;= 600]"/>
@@ -1138,55 +1141,55 @@ Added Log Comment
 		<xsl:apply-templates select="marc:datafield[@tag=656]"/>
 
 		<xsl:for-each select="marc:datafield[@tag=752]">
-			<subject>
-				<hierarchicalGeographic>
+		    <mods:subject>
+		        <mods:hierarchicalGeographic>
 					<xsl:for-each select="marc:subfield[@code='a']">
-						<country>
+					    <mods:country>
 							<xsl:call-template name="chopPunctuation">
 								<xsl:with-param name="chopString" select="."/>
 							</xsl:call-template>
-						</country>
+						</mods:country>
 					</xsl:for-each>
 					<xsl:for-each select="marc:subfield[@code='b']">
-						<state>
+					    <mods:state>
 							<xsl:call-template name="chopPunctuation">
 								<xsl:with-param name="chopString" select="."/>
 							</xsl:call-template>
-						</state>
+						</mods:state>
 					</xsl:for-each>
 					<xsl:for-each select="marc:subfield[@code='c']">
-						<county>
+					    <mods:county>
 							<xsl:call-template name="chopPunctuation">
 								<xsl:with-param name="chopString" select="."/>
 							</xsl:call-template>
-						</county>
+						</mods:county>
 					</xsl:for-each>
 					<xsl:for-each select="marc:subfield[@code='d']">
-						<city>
+					    <mods:city>
 							<xsl:call-template name="chopPunctuation">
 								<xsl:with-param name="chopString" select="."/>
 							</xsl:call-template>
-						</city>
+						</mods:city>
 					</xsl:for-each>
-				</hierarchicalGeographic>
-			</subject>
+				</mods:hierarchicalGeographic>
+			</mods:subject>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=045][marc:subfield[@code='b']]">
-			<subject>
+		    <mods:subject>
 
 				<xsl:choose>
 
 					<xsl:when test="@ind1=2">
 
-						<temporal encoding="iso8601" point="start">
+					    <mods:temporal encoding="iso8601" point="start">
 							<xsl:call-template name="chopPunctuation">
 								<xsl:with-param name="chopString">
 									<xsl:value-of select="marc:subfield[@code='b'][1]"/>
 								</xsl:with-param>
 							</xsl:call-template>
-						</temporal>
-						<temporal encoding="iso8601" point="end">
+						</mods:temporal>
+					    <mods:temporal encoding="iso8601" point="end">
 							<xsl:call-template name="chopPunctuation">
 								<xsl:with-param name="chopString">
 
@@ -1194,38 +1197,38 @@ Added Log Comment
 									<xsl:value-of select="marc:subfield[@code='b'][2]"/>
 								</xsl:with-param>
 							</xsl:call-template>
-						</temporal>
+						</mods:temporal>
 					</xsl:when>
 					<xsl:otherwise>
 						<xsl:for-each select="marc:subfield[@code='b']">
-							<temporal encoding="iso8601">
+						    <mods:temporal encoding="iso8601">
 								<xsl:call-template name="chopPunctuation">
 									<xsl:with-param name="chopString" select="."/>
 								</xsl:call-template>
-							</temporal>
+							</mods:temporal>
 						</xsl:for-each>
 					</xsl:otherwise>
 				</xsl:choose>
-			</subject>
+			</mods:subject>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=050]">
 			<xsl:for-each select="marc:subfield[@code='b']">
-				<classification authority="lcc">
+			    <mods:classification authority="lcc">
 					<xsl:value-of select="preceding-sibling::marc:subfield[@code='a'][1]"/>
 					<xsl:text> </xsl:text>
 					<xsl:value-of select="text()"/>
-				</classification>
+				</mods:classification>
 			</xsl:for-each>
 			<xsl:for-each select="marc:subfield[@code='a'][not(following-sibling::marc:subfield[@code='b'])]">
-				<classification authority="lcc">
+			    <mods:classification authority="lcc">
 					<xsl:value-of select="text()"/>
-				</classification>
+				</mods:classification>
 			</xsl:for-each>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=082]">
-			<classification authority="ddc">
+		    <mods:classification authority="ddc">
 				<xsl:if test="marc:subfield[@code='2']">
 					<xsl:attribute name="edition">
 						<xsl:value-of select="marc:subfield[@code='2']"/>
@@ -1234,61 +1237,61 @@ Added Log Comment
 				<xsl:call-template name="subfieldSelect">
 					<xsl:with-param name="codes">ab</xsl:with-param>
 				</xsl:call-template>
-			</classification>
+			</mods:classification>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=080]">
-			<classification authority="udc">
+		    <mods:classification authority="udc">
 				<xsl:call-template name="subfieldSelect">
 					<xsl:with-param name="codes">abx</xsl:with-param>
 				</xsl:call-template>
-			</classification>
+			</mods:classification>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=060]">
-			<classification authority="nlm">
+		    <mods:classification authority="nlm">
 				<xsl:call-template name="subfieldSelect">
 					<xsl:with-param name="codes">ab</xsl:with-param>
 				</xsl:call-template>
-			</classification>
+			</mods:classification>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=086][@ind1=0]">
-			<classification authority="sudocs">
+		    <mods:classification authority="sudocs">
 				<xsl:value-of select="marc:subfield[@code='a']"/>
-			</classification>
+			</mods:classification>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=086][@ind1=1]">
-			<classification authority="candoc">
+		    <mods:classification authority="candoc">
 				<xsl:value-of select="marc:subfield[@code='a']"/>
-			</classification>
+			</mods:classification>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=086]">
-			<classification>
+		    <mods:classification>
 				<xsl:attribute name="authority">
 					<xsl:value-of select="marc:subfield[@code='2']"/>
 				</xsl:attribute>
 				<xsl:value-of select="marc:subfield[@code='a']"/>
-			</classification>
+			</mods:classification>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=084]">
-			<classification>
+		    <mods:classification>
 				<xsl:attribute name="authority">
 					<xsl:value-of select="marc:subfield[@code='2']"/>
 				</xsl:attribute>
 				<xsl:call-template name="subfieldSelect">
 					<xsl:with-param name="codes">ab</xsl:with-param>
 				</xsl:call-template>
-			</classification>
+			</mods:classification>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=440]">
-			<relatedItem type="series">
-				<titleInfo>
-					<title>
+		    <mods:relatedItem type="series">
+		        <mods:titleInfo>
+		            <mods:title>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:call-template name="subfieldSelect">
@@ -1296,16 +1299,16 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</title>
+					</mods:title>
 					<xsl:call-template name="part"/>
-				</titleInfo>
-			</relatedItem>
+				</mods:titleInfo>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=490][@ind1=0]">
-			<relatedItem type="series">
-				<titleInfo>
-					<title>
+			<mods:relatedItem type="series">
+			    <mods:titleInfo>
+			        <mods:title>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:call-template name="subfieldSelect">
@@ -1313,55 +1316,59 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</title>
+					</mods:title>
 					<xsl:call-template name="part"/>
-				</titleInfo>
-			</relatedItem>
+				</mods:titleInfo>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=510]">
-			<relatedItem type="isReferencedBy">
-				<note>
+		    <mods:relatedItem type="isReferencedBy">
+		        <mods:note>
 					<xsl:call-template name="subfieldSelect">
 						<xsl:with-param name="codes">abcx3</xsl:with-param>
 					</xsl:call-template>
-				</note>
-			</relatedItem>
+				</mods:note>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=534]">
-			<relatedItem type="original">
+		    <mods:relatedItem type="original">
 				<xsl:call-template name="relatedTitle"/>
 				<xsl:call-template name="relatedName"/>
 				<xsl:if test="marc:subfield[@code='b' or @code='c']">
-					<originInfo>
+				    <mods:originInfo>
 						<xsl:for-each select="marc:subfield[@code='c']">
-							<publisher>
+						    <mods:publisher>
 								<xsl:value-of select="."/>
-							</publisher>
+							</mods:publisher>
 						</xsl:for-each>
 						<xsl:for-each select="marc:subfield[@code='b']">
-							<edition>
+						    <mods:edition>
 								<xsl:value-of select="."/>
-							</edition>
+							</mods:edition>
 						</xsl:for-each>
-					</originInfo>
+					</mods:originInfo>
 				</xsl:if>
 				<xsl:call-template name="relatedIdentifierISSN"/>
 				<xsl:for-each select="marc:subfield[@code='z']">
-					<identifier type="isbn">
+				    <mods:identifier type="isbn">
 						<xsl:value-of select="."/>
-					</identifier>
+					</mods:identifier>
 				</xsl:for-each>
 				<xsl:call-template name="relatedNote"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
+	   
+         <xsl:if test="marc:datafield[@tag=590]">
+	        <mods:note><xsl:value-of select="marc:datafield[@tag=590]"/></mods:note>     
+	    </xsl:if>
 
 		<xsl:for-each select="marc:datafield[@tag=700][marc:subfield[@code='t']]">
-			<relatedItem>
+		    <mods:relatedItem>
 				<xsl:call-template name="constituentOrRelatedType"/>
-				<titleInfo>
-					<title>
+		        <mods:titleInfo>
+		            <mods:title>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:call-template name="specialSubfieldSelect">
@@ -1371,31 +1378,31 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</title>
+					</mods:title>
 					<xsl:call-template name="part"/>
-				</titleInfo>
-				<name type="personal">
-					<namePart>
+				</mods:titleInfo>
+		        <mods:name type="personal">
+		            <mods:namePart>
 						<xsl:call-template name="specialSubfieldSelect">
 							<xsl:with-param name="anyCodes">aq</xsl:with-param>
 							<xsl:with-param name="axis">t</xsl:with-param>
 							<xsl:with-param name="beforeCodes">g</xsl:with-param>
 						</xsl:call-template>
-					</namePart>
+					</mods:namePart>
 					<xsl:call-template name="termsOfAddress"/>
 					<xsl:call-template name="nameDate"/>
 					<xsl:call-template name="role"/>
-				</name>
+				</mods:name>
 				<xsl:call-template name="relatedForm"/>
 				<xsl:call-template name="relatedIdentifierISSN"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=710][marc:subfield[@code='t']]">
-			<relatedItem>
+		    <mods:relatedItem>
 				<xsl:call-template name="constituentOrRelatedType"/>
-				<titleInfo>
-					<title>
+		        <mods:titleInfo>
+		            <mods:title>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:call-template name="specialSubfieldSelect">
@@ -1405,19 +1412,19 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</title>
+					</mods:title>
 					<xsl:call-template name="relatedPartNumName"/>
-				</titleInfo>
-				<name type="corporate">
+				</mods:titleInfo>
+		        <mods:name type="corporate">
 					<xsl:for-each select="marc:subfield[@code='a']">
-						<namePart>
+					    <mods:namePart>
 							<xsl:value-of select="."/>
-						</namePart>
+						</mods:namePart>
 					</xsl:for-each>
 					<xsl:for-each select="marc:subfield[@code='b']">
-						<namePart>
+					    <mods:namePart>
 							<xsl:value-of select="."/>
-						</namePart>
+						</mods:namePart>
 					</xsl:for-each>
 					<xsl:variable name="tempNamePart">
 						<xsl:call-template name="specialSubfieldSelect">
@@ -1427,22 +1434,22 @@ Added Log Comment
 						</xsl:call-template>
 					</xsl:variable>
 					<xsl:if test="normalize-space($tempNamePart)">
-						<namePart>
+					    <mods:namePart>
 							<xsl:value-of select="$tempNamePart"/>
-						</namePart>
+						</mods:namePart>
 					</xsl:if>
 					<xsl:call-template name="role"/>
-				</name>
+				</mods:name>
 				<xsl:call-template name="relatedForm"/>
 				<xsl:call-template name="relatedIdentifierISSN"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=711][marc:subfield[@code='t']]">
-			<relatedItem>
+		    <mods:relatedItem>
 				<xsl:call-template name="constituentOrRelatedType"/>
-				<titleInfo>
-					<title>
+		        <mods:titleInfo>
+		            <mods:title>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:call-template name="specialSubfieldSelect">
@@ -1452,28 +1459,28 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</title>
+					</mods:title>
 					<xsl:call-template name="relatedPartNumName"/>
-				</titleInfo>
-				<name type="conference">
-					<namePart>
+				</mods:titleInfo>
+		        <mods:name type="conference">
+		            <mods:namePart>
 						<xsl:call-template name="specialSubfieldSelect">
 							<xsl:with-param name="anyCodes">aqdc</xsl:with-param>
 							<xsl:with-param name="axis">t</xsl:with-param>
 							<xsl:with-param name="beforeCodes">gn</xsl:with-param>
 						</xsl:call-template>
-					</namePart>
-				</name>
+					</mods:namePart>
+				</mods:name>
 				<xsl:call-template name="relatedForm"/>
 				<xsl:call-template name="relatedIdentifierISSN"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=730][@ind2=2]">
-			<relatedItem>
+		    <mods:relatedItem>
 				<xsl:call-template name="constituentOrRelatedType"/>
-				<titleInfo>
-					<title>
+		        <mods:titleInfo>
+		            <mods:title>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:call-template name="subfieldSelect">
@@ -1481,89 +1488,89 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</title>
+					</mods:title>
 					<xsl:call-template name="part"/>
-				</titleInfo>
+				</mods:titleInfo>
 				<xsl:call-template name="relatedForm"/>
 				<xsl:call-template name="relatedIdentifierISSN"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=740][@ind2=2]">
-			<relatedItem>
+		    <mods:relatedItem>
 				<xsl:call-template name="constituentOrRelatedType"/>
-				<titleInfo>
-					<title>
+		        <mods:titleInfo>
+		            <mods:title>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:value-of select="marc:subfield[@code='a']"/>
 							</xsl:with-param>
 						</xsl:call-template>
-					</title>
+					</mods:title>
 					<xsl:call-template name="part"/>
-				</titleInfo>
+				</mods:titleInfo>
 				<xsl:call-template name="relatedForm"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=760]|marc:datafield[@tag=762]">
-			<relatedItem type="series">
+		    <mods:relatedItem type="series">
 				<xsl:call-template name="relatedItem76X-78X"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=765]|marc:datafield[@tag=767]|marc:datafield[@tag=777]|marc:datafield[@tag=787]">
-			<relatedItem>
+		    <mods:relatedItem>
 				<xsl:call-template name="relatedItem76X-78X"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=775]">
-			<relatedItem type="otherVersion">
+		    <mods:relatedItem type="otherVersion">
 				<xsl:call-template name="relatedItem76X-78X"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=770]|marc:datafield[@tag=774]">
-			<relatedItem type="constituent">
+		    <mods:relatedItem type="constituent">
 				<xsl:call-template name="relatedItem76X-78X"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=772]|marc:datafield[@tag=773]">
-			<relatedItem type="host">
+		    <mods:relatedItem type="host">
 				<xsl:call-template name="relatedItem76X-78X"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=776]">
-			<relatedItem type="otherFormat">
+		    <mods:relatedItem type="otherFormat">
 				<xsl:call-template name="relatedItem76X-78X"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=780]">
-			<relatedItem type="preceding">
+		    <mods:relatedItem type="preceding">
 				<xsl:call-template name="relatedItem76X-78X"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=785]">
-			<relatedItem type="succeeding">
+		    <mods:relatedItem type="succeeding">
 				<xsl:call-template name="relatedItem76X-78X"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=786]">
-			<relatedItem type="original">
+		    <mods:relatedItem type="original">
 				<xsl:call-template name="relatedItem76X-78X"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=800]">
-			<relatedItem type="series">
-				<titleInfo>
-					<title>
+		    <mods:relatedItem type="series">
+		        <mods:titleInfo>
+		            <mods:title>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:call-template name="specialSubfieldSelect">
@@ -1573,11 +1580,11 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</title>
+					</mods:title>
 					<xsl:call-template name="part"/>
-				</titleInfo>
-				<name type="personal">
-					<namePart>
+				</mods:titleInfo>
+		        <mods:name type="personal">
+		            <mods:namePart>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:call-template name="specialSubfieldSelect">
@@ -1587,19 +1594,19 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</namePart>
+					</mods:namePart>
 					<xsl:call-template name="termsOfAddress"/>
 					<xsl:call-template name="nameDate"/>
 					<xsl:call-template name="role"/>
-				</name>
+				</mods:name>
 				<xsl:call-template name="relatedForm"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=810]">
-			<relatedItem type="series">
-				<titleInfo>
-					<title>
+		    <mods:relatedItem type="series">
+		        <mods:titleInfo>
+		            <mods:title>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:call-template name="specialSubfieldSelect">
@@ -1609,38 +1616,37 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</title>
+					</mods:title>
 					<xsl:call-template name="relatedPartNumName"/>
-				</titleInfo>
-				<name type="corporate">
+				</mods:titleInfo>
+		        <mods:name type="corporate">
 					<xsl:for-each select="marc:subfield[@code='a']">
-						<namePart>
+					    <mods:namePart>
 							<xsl:value-of select="."/>
-						</namePart>
+						</mods:namePart>
 					</xsl:for-each>
 					<xsl:for-each select="marc:subfield[@code='b']">
-
-						<namePart>
+					    <mods:namePart>
 							<xsl:value-of select="."/>
-						</namePart>
+						</mods:namePart>
 					</xsl:for-each>
-					<namePart>
+		            <mods:namePart>
 						<xsl:call-template name="specialSubfieldSelect">
 							<xsl:with-param name="anyCodes">c</xsl:with-param>
 							<xsl:with-param name="axis">t</xsl:with-param>
 							<xsl:with-param name="beforeCodes">dgn</xsl:with-param>
 						</xsl:call-template>
-					</namePart>
+					</mods:namePart>
 					<xsl:call-template name="role"/>
-				</name>
+				</mods:name>
 				<xsl:call-template name="relatedForm"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=811]">
-			<relatedItem type="series">
-				<titleInfo>
-					<title>
+		    <mods:relatedItem type="series">
+		        <mods:titleInfo>
+		            <mods:title>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:call-template name="specialSubfieldSelect">
@@ -1650,27 +1656,27 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</title>
+					</mods:title>
 					<xsl:call-template name="relatedPartNumName"/>
-				</titleInfo>
-				<name type="conference">
-					<namePart>
+				</mods:titleInfo>
+		        <mods:name type="conference">
+		            <mods:namePart>
 						<xsl:call-template name="specialSubfieldSelect">
 							<xsl:with-param name="anyCodes">aqdc</xsl:with-param>
 							<xsl:with-param name="axis">t</xsl:with-param>
 							<xsl:with-param name="beforeCodes">gn</xsl:with-param>
 						</xsl:call-template>
-					</namePart>
+					</mods:namePart>
 					<xsl:call-template name="role"/>
-				</name>
+				</mods:name>
 				<xsl:call-template name="relatedForm"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=830]">
-			<relatedItem type="series">
-				<titleInfo>
-					<title>
+		    <mods:relatedItem type="series">
+		        <mods:titleInfo>
+		            <mods:title>
 						<xsl:call-template name="chopPunctuation">
 							<xsl:with-param name="chopString">
 								<xsl:call-template name="subfieldSelect">
@@ -1678,58 +1684,58 @@ Added Log Comment
 								</xsl:call-template>
 							</xsl:with-param>
 						</xsl:call-template>
-					</title>
+					</mods:title>
 					<xsl:call-template name="part"/>
-				</titleInfo>
+				</mods:titleInfo>
 				<xsl:call-template name="relatedForm"/>
-			</relatedItem>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=856][@ind2=2]/marc:subfield[@code='q']">
-			<relatedItem>
-				<internetMediaType>
+		    <mods:relatedItem>
+		        <mods:internetMediaType>
 					<xsl:value-of select="."/>
-				</internetMediaType>
-			</relatedItem>
+				</mods:internetMediaType>
+			</mods:relatedItem>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=020]">
-			<identifier type="isbn">
+		    <mods:identifier type="isbn">
 				<xsl:call-template name="isInvalid"/>
 				<xsl:value-of select="marc:subfield[@code='a']"/>
-			</identifier>
+			</mods:identifier>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=024][@ind1=0]">
-			<identifier type="isrc">
+		    <mods:identifier type="isrc">
 				<xsl:call-template name="isInvalid"/>
 				<xsl:value-of select="marc:subfield[@code='a']"/>
-			</identifier>
+			</mods:identifier>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=024][@ind1=2]">
-			<identifier type="ismn">
+		    <mods:identifier type="ismn">
 				<xsl:call-template name="isInvalid"/>
 				<xsl:value-of select="marc:subfield[@code='a']"/>
-			</identifier>
+			</mods:identifier>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=022]">
-			<identifier type="issn">
+		    <mods:identifier type="issn">
 				<xsl:call-template name="isInvalid"/>
 				<xsl:value-of select="marc:subfield[@code='a']"/>
-			</identifier>
+			</mods:identifier>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=010]">
-			<identifier type="lccn">
+		    <mods:identifier type="lccn">
 				<xsl:call-template name="isInvalid"/>
 				<xsl:value-of select="normalize-space(marc:subfield[@code='a'])"/>
-			</identifier>
+			</mods:identifier>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=028]">
-			<identifier>
+		    <mods:identifier>
 				<xsl:call-template name="isInvalid"/>
 				<xsl:attribute name="type">
 					<xsl:choose>
@@ -1748,29 +1754,29 @@ Added Log Comment
 						</xsl:choose>
 					</xsl:with-param>
 				</xsl:call-template>
-			</identifier>
+			</mods:identifier>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=024][@ind1='4']">
-			<identifier type="sici">
+		    <mods:identifier type="sici">
 				<xsl:call-template name="isInvalid"/>
 				<xsl:call-template name="subfieldSelect">
 					<xsl:with-param name="codes">ab</xsl:with-param>
 				</xsl:call-template>
-			</identifier>
+			</mods:identifier>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=037]">
-			<identifier type="stock number">
+		    <mods:identifier type="stock number">
 				<xsl:call-template name="isInvalid"/>
 				<xsl:call-template name="subfieldSelect">
 					<xsl:with-param name="codes">ab</xsl:with-param>
 				</xsl:call-template>
-			</identifier>
+			</mods:identifier>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=856][marc:subfield[@code='u']]">
-			<identifier>
+		    <mods:identifier>
 				<xsl:attribute name="type">
 					<xsl:choose>
 						<xsl:when test="starts-with(marc:subfield[@code='u'],'urn:doi') or starts-with(marc:subfield[@code='u'],'doi')">doi</xsl:when>
@@ -1786,9 +1792,9 @@ Added Log Comment
 						<xsl:value-of select="marc:subfield[@code='u']"/>
 					</xsl:otherwise>
 				</xsl:choose>
-			</identifier>
+			</mods:identifier>
 			<xsl:if test="starts-with(marc:subfield[@code='u'],'urn:hdl') or starts-with(marc:subfield[@code='u'],'hdl')">
-				<identifier type="hdl">
+			    <mods:identifier type="hdl">
 					<xsl:if test="marc:subfield[@code='y' or @code='3' or @code='z']">
 						<xsl:attribute name="displayLabel">
 							<xsl:call-template name="subfieldSelect">
@@ -1797,20 +1803,20 @@ Added Log Comment
 						</xsl:attribute>
 					</xsl:if>
 					<xsl:value-of select="concat('hdl:',substring-after(marc:subfield[@code='u'],'http://hdl.loc.gov/'))"/>
-				</identifier>
+				</mods:identifier>
 			</xsl:if>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=024][@ind1=1]">
-			<identifier type="upc">
+		    <mods:identifier type="upc">
 				<xsl:call-template name="isInvalid"/>
 				<xsl:value-of select="marc:subfield[@code='a']"/>
-			</identifier>
+			</mods:identifier>
 		</xsl:for-each>
 		<!-- 1/04 fix added $y -->
 		<xsl:for-each select="marc:datafield[@tag=856][marc:subfield[@code='u']]">
-			<location>
-				<url>
+		    <mods:location>
+		        <mods:url>
 					<xsl:if test="marc:subfield[@code='y' or @code='3']">
 						<xsl:attribute name="displayLabel">
 							<xsl:call-template name="subfieldSelect">
@@ -1819,90 +1825,90 @@ Added Log Comment
 						</xsl:attribute>
 					</xsl:if>
 					<xsl:value-of select="marc:subfield[@code='u']"/>
-				</url>
-			</location>
+				</mods:url>
+			</mods:location>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=852]">
-			<location>
-				<physicalLocation>
+		    <mods:location>
+		        <mods:physicalLocation>
 					<xsl:call-template name="displayLabel"/>
 					<xsl:call-template name="subfieldSelect">
 						<xsl:with-param name="codes">abje</xsl:with-param>
 					</xsl:call-template>
-				</physicalLocation>
-			</location>
+				</mods:physicalLocation>
+			</mods:location>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=506]">
-			<accessCondition type="restrictionOnAccess">
+		    <mods:accessCondition type="restriction on access">
 				<xsl:call-template name="subfieldSelect">
 					<xsl:with-param name="codes">abcd35</xsl:with-param>
 				</xsl:call-template>
-			</accessCondition>
+			</mods:accessCondition>
 		</xsl:for-each>
 
 		<xsl:for-each select="marc:datafield[@tag=540]">
-			<accessCondition type="useAndReproduction">
+		    <mods:accessCondition type="use and reproduction">
 				<xsl:call-template name="subfieldSelect">
 					<xsl:with-param name="codes">abcde35</xsl:with-param>
 				</xsl:call-template>
-			</accessCondition>
+			</mods:accessCondition>
 		</xsl:for-each>
 
-		<recordInfo>
+		<mods:recordInfo>
 			<xsl:for-each select="marc:datafield[@tag=040]">
-				<recordContentSource authority="marcorg">
+			    <mods:recordContentSource authority="marcorg">
 					<xsl:value-of select="marc:subfield[@code='a']"/>
-				</recordContentSource>
+				</mods:recordContentSource>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:controlfield[@tag=008]">
-				<recordCreationDate encoding="marc">
+			    <mods:recordCreationDate encoding="marc">
 					<xsl:value-of select="substring(.,1,6)"/>
-				</recordCreationDate>
+				</mods:recordCreationDate>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:controlfield[@tag=005]">
-				<recordChangeDate encoding="iso8601">
+			    <mods:recordChangeDate encoding="iso8601">
 					<xsl:value-of select="."/>
-				</recordChangeDate>
+				</mods:recordChangeDate>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:controlfield[@tag=001]">
-				<recordIdentifier>
+			    <mods:recordIdentifier>
 					<xsl:if test="../marc:controlfield[@tag=003]">
 						<xsl:attribute name="source">
 							<xsl:value-of select="../marc:controlfield[@tag=003]"/>
 						</xsl:attribute>
 					</xsl:if>
 					<xsl:value-of select="."/>
-				</recordIdentifier>
+				</mods:recordIdentifier>
 			</xsl:for-each>
 
 			<xsl:for-each select="marc:datafield[@tag=040]/marc:subfield[@code='b']">
-				<languageOfCataloging>
-					<languageTerm authority="iso639-2b" type="code">
+			    <mods:languageOfCataloging>
+			        <mods:languageTerm authority="iso639-2b" type="code">
 						<xsl:value-of select="."/>
-					</languageTerm>
-				</languageOfCataloging>
+					</mods:languageTerm>
+				</mods:languageOfCataloging>
 			</xsl:for-each>
-		</recordInfo>
+		</mods:recordInfo>
 	</xsl:template>
 
 	<xsl:template name="displayForm">
 		<xsl:for-each select="marc:subfield[@code='c']">
-			<displayForm>
+		    <mods:displayForm>
 				<xsl:value-of select="."/>
-			</displayForm>
+			</mods:displayForm>
 		</xsl:for-each>
 	</xsl:template>
 
 	<xsl:template name="affiliation">
 		<xsl:for-each select="marc:subfield[@code='u']">
-			<affiliation>
+		    <mods:affiliation>
 				<xsl:value-of select="."/>
-			</affiliation>
+			</mods:affiliation>
 		</xsl:for-each>
 	</xsl:template>
 
@@ -1916,18 +1922,34 @@ Added Log Comment
 
 	<xsl:template name="role">
 		<xsl:for-each select="marc:subfield[@code='e']">
-			<role>
-				<roleTerm type="text">
-					<xsl:value-of select="."/>
-				</roleTerm>
-			</role>
+            <xsl:choose>
+                <xsl:when test=".='author.'">
+                    <mods:role>
+                        <mods:roleTerm type="text" authority="marcrelator">Author</mods:roleTerm>
+                        <mods:roleTerm type="code" authority="marcrelator">aut</mods:roleTerm>
+                    </mods:role>
+                </xsl:when>
+                <xsl:when test=".='editor.'">
+                    <mods:role>
+                        <mods:roleTerm type="text" authority="marcrelator">Editor</mods:roleTerm>
+                        <mods:roleTerm type="code" authority="marcrelator">edt</mods:roleTerm>
+                    </mods:role>
+                </xsl:when>
+                <xsl:otherwise>
+                    <mods:role>
+                        <mods:roleTerm type="text">
+                            <xsl:value-of select="."/>
+                        </mods:roleTerm>
+                    </mods:role>
+                </xsl:otherwise>
+            </xsl:choose>
 		</xsl:for-each>
 		<xsl:for-each select="marc:subfield[@code='4']">
-			<role>
-				<roleTerm authority="marcrelator" type="code">
+			<mods:role>
+				<mods:roleTerm authority="marcrelator" type="code">
 					<xsl:value-of select="."/>
-				</roleTerm>
-			</role>
+				</mods:roleTerm>
+			</mods:role>
 		</xsl:for-each>
 	</xsl:template>
 
@@ -1947,34 +1969,34 @@ Added Log Comment
 			</xsl:call-template>
 		</xsl:variable>
 		<xsl:if test="string-length(normalize-space($partNumber))">
-			<partNumber>
+		    <mods:partNumber>
 				<xsl:call-template name="chopPunctuation">
 					<xsl:with-param name="chopString" select="$partNumber"/>
 				</xsl:call-template>
-			</partNumber>
+			</mods:partNumber>
 		</xsl:if>
 		<xsl:if test="string-length(normalize-space($partName))">
-			<partName>
+		    <mods:partName>
 				<xsl:call-template name="chopPunctuation">
 					<xsl:with-param name="chopString" select="$partName"/>
 				</xsl:call-template>
-			</partName>
+			</mods:partName>
 		</xsl:if>
 	</xsl:template>
 
 	<xsl:template name="relatedPart">
 		<xsl:if test="@tag=773">
 			<xsl:for-each select="marc:subfield[@code='g']">
-				<part>
-					<text>
+			    <mods:part>
+			        <mods:text>
 						<xsl:value-of select="."/>
-					</text>
-				</part>
+					</mods:text>
+				</mods:part>
 			</xsl:for-each>
 			<xsl:for-each select="marc:subfield[@code='q']">
-				<part>
+			    <mods:part>
 					<xsl:call-template name="parsePart"/>
-				</part>
+				</mods:part>
 			</xsl:for-each>
 		</xsl:if>
 	</xsl:template>
@@ -1995,88 +2017,88 @@ Added Log Comment
 			</xsl:call-template>
 		</xsl:variable>
 		<xsl:if test="string-length(normalize-space($partNumber))">
-			<partNumber>
+		    <mods:partNumber>
 				<xsl:value-of select="$partNumber"/>
-			</partNumber>
+			</mods:partNumber>
 		</xsl:if>
 		<xsl:if test="string-length(normalize-space($partName))">
-			<partName>
+		    <mods:partName>
 				<xsl:value-of select="$partName"/>
-			</partName>
+			</mods:partName>
 		</xsl:if>
 	</xsl:template>
 
 	<xsl:template name="relatedName">
 		<xsl:for-each select="marc:subfield[@code='a']">
-			<name>
-				<namePart>
+		    <mods:name>
+		        <mods:namePart>
 					<xsl:value-of select="."/>
-				</namePart>
-			</name>
+				</mods:namePart>
+			</mods:name>
 		</xsl:for-each>
 	</xsl:template>
 
 	<xsl:template name="relatedForm">
 		<xsl:for-each select="marc:subfield[@code='h']">
-			<physicalDescription>
-				<form>
+		    <mods:physicalDescription>
+		        <mods:form>
 					<xsl:value-of select="."/>
-				</form>
-			</physicalDescription>
+				</mods:form>
+			</mods:physicalDescription>
 		</xsl:for-each>
 	</xsl:template>
 
 	<xsl:template name="relatedExtent">
 		<xsl:for-each select="marc:subfield[@code='h']">
-			<physicalDescription>
-				<extent>
+		    <mods:physicalDescription>
+		        <mods:extent>
 					<xsl:value-of select="."/>
-				</extent>
-			</physicalDescription>
+				</mods:extent>
+			</mods:physicalDescription>
 		</xsl:for-each>
 	</xsl:template>
 
 	<xsl:template name="relatedNote">
 		<xsl:for-each select="marc:subfield[@code='n']">
-			<note>
+		    <mods:note>
 				<xsl:value-of select="."/>
-			</note>
+			</mods:note>
 		</xsl:for-each>
 	</xsl:template>
 
 	<xsl:template name="relatedSubject">
 		<xsl:for-each select="marc:subfield[@code='j']">
-			<subject>
-				<temporal encoding="iso8601">
+		    <mods:subject>
+		        <mods:temporal encoding="iso8601">
 					<xsl:call-template name="chopPunctuation">
 						<xsl:with-param name="chopString" select="."/>
 					</xsl:call-template>
-				</temporal>
-			</subject>
+				</mods:temporal>
+			</mods:subject>
 		</xsl:for-each>
 	</xsl:template>
 
 	<xsl:template name="relatedIdentifierISSN">
 		<xsl:for-each select="marc:subfield[@code='x']">
-			<identifier type="issn">
+		    <mods:identifier type="issn">
 				<xsl:value-of select="."/>
-			</identifier>
+			</mods:identifier>
 		</xsl:for-each>
 	</xsl:template>
 
 	<xsl:template name="relatedIdentifierLocal">
 		<xsl:for-each select="marc:subfield[@code='w']">
-			<identifier type="local">
+		    <mods:identifier type="local">
 				<xsl:value-of select="."/>
-			</identifier>
+			</mods:identifier>
 		</xsl:for-each>
 	</xsl:template>
 
 	<xsl:template name="relatedIdentifier">
 		<xsl:for-each select="marc:subfield[@code='o']">
-			<identifier>
+		    <mods:identifier>
 				<xsl:value-of select="."/>
-			</identifier>
+			</mods:identifier>
 		</xsl:for-each>
 	</xsl:template>
 
@@ -2096,55 +2118,61 @@ Added Log Comment
 	</xsl:template>
 
 	<xsl:template name="subjectGeographicZ">
-		<geographic>
-
-
+	    <mods:geographic>
 			<xsl:call-template name="chopPunctuation">
 				<xsl:with-param name="chopString" select="."/>
 			</xsl:call-template>
-		</geographic>
+		</mods:geographic>
 	</xsl:template>
 
 	<xsl:template name="subjectTemporalY">
-		<temporal>
+	    <mods:temporal>
 			<xsl:call-template name="chopPunctuation">
 				<xsl:with-param name="chopString" select="."/>
 			</xsl:call-template>
-		</temporal>
+		</mods:temporal>
 	</xsl:template>
 
 	<xsl:template name="subjectTopic">
-		<topic>
+	    <mods:topic>
 			<xsl:call-template name="chopPunctuation">
 				<xsl:with-param name="chopString" select="."/>
 			</xsl:call-template>
-		</topic>
+		</mods:topic>
 	</xsl:template>
 
+    <xsl:template name="subjectGenre">
+        <mods:genre>
+            <xsl:call-template name="chopPunctuation">
+                <xsl:with-param name="chopString" select="."/>
+            </xsl:call-template>
+        </mods:genre>
+    </xsl:template>
+
 	<xsl:template name="nameABCDN">
-		<xsl:for-each select="marc:subfield[@code='a']">
-			<namePart>
+		<xsl:for-each select="marc:subfield[@code='a']">	    
+		    <mods:namePart>
 				<xsl:call-template name="chopPunctuation">
 					<xsl:with-param name="chopString" select="."/>
 				</xsl:call-template>
-			</namePart>
+			</mods:namePart>
 		</xsl:for-each>
 		<xsl:for-each select="marc:subfield[@code='b']">
-			<namePart>
+		    <mods:namePart>
 				<xsl:value-of select="."/>
-			</namePart>
+			</mods:namePart>
 		</xsl:for-each>
 		<xsl:if test="marc:subfield[@code='c'] or marc:subfield[@code='d'] or marc:subfield[@code='n']">
-			<namePart>
+		    <mods:namePart>
 				<xsl:call-template name="subfieldSelect">
 					<xsl:with-param name="codes">cdn</xsl:with-param>
 				</xsl:call-template>
-			</namePart>
+			</mods:namePart>
 		</xsl:if>
 	</xsl:template>
 
 	<xsl:template name="nameABCDQ">
-		<namePart>
+	    <mods:namePart>
 			<xsl:call-template name="chopPunctuation">
 				<xsl:with-param name="chopString">
 					<xsl:call-template name="subfieldSelect">
@@ -2155,17 +2183,17 @@ Added Log Comment
 					<xsl:text>:,;/ </xsl:text>
 				</xsl:with-param>
 			</xsl:call-template>
-		</namePart>
+		</mods:namePart>
 		<xsl:call-template name="termsOfAddress"/>
 		<xsl:call-template name="nameDate"/>
 	</xsl:template>
 
 	<xsl:template name="nameACDEQ">
-		<namePart>
+	    <mods:namePart>
 			<xsl:call-template name="subfieldSelect">
 				<xsl:with-param name="codes">acdeq</xsl:with-param>
 			</xsl:call-template>
-		</namePart>
+		</mods:namePart>
 	</xsl:template>
 
 	<xsl:template name="constituentOrRelatedType">
@@ -2176,88 +2204,88 @@ Added Log Comment
 
 	<xsl:template name="relatedTitle">
 		<xsl:for-each select="marc:subfield[@code='t']">
-			<titleInfo>
-				<title>
+		    <mods:titleInfo>
+		        <mods:title>
 					<xsl:call-template name="chopPunctuation">
 						<xsl:with-param name="chopString">
 							<xsl:value-of select="."/>
 						</xsl:with-param>
 					</xsl:call-template>
-				</title>
-			</titleInfo>
+				</mods:title>
+			</mods:titleInfo>
 		</xsl:for-each>
 	</xsl:template>
 
 	<xsl:template name="relatedTitle76X-78X">
 		<xsl:for-each select="marc:subfield[@code='t']">
-			<titleInfo>
-				<title>
+		    <mods:titleInfo>
+		        <mods:title>
 					<xsl:call-template name="chopPunctuation">
 						<xsl:with-param name="chopString">
 							<xsl:value-of select="."/>
 						</xsl:with-param>
 					</xsl:call-template>
-				</title>
+				</mods:title>
 				<xsl:if test="marc:datafield[@tag!=773]and marc:subfield[@code='g']">
 					<xsl:call-template name="relatedPartNumName"/>
 				</xsl:if>
-			</titleInfo>
+			</mods:titleInfo>
 		</xsl:for-each>
 		<xsl:for-each select="marc:subfield[@code='p']">
-			<titleInfo type="abbreviated">
-				<title>
+		    <mods:titleInfo type="abbreviated">
+		        <mods:title>
 					<xsl:call-template name="chopPunctuation">
 						<xsl:with-param name="chopString">
 							<xsl:value-of select="."/>
 						</xsl:with-param>
 					</xsl:call-template>
-				</title>
+				</mods:title>
 				<xsl:if test="marc:datafield[@tag!=773]and marc:subfield[@code='g']">
 					<xsl:call-template name="relatedPartNumName"/>
 				</xsl:if>
-			</titleInfo>
+			</mods:titleInfo>
 		</xsl:for-each>
 		<xsl:for-each select="marc:subfield[@code='s']">
-			<titleInfo type="uniform">
-				<title>
+		    <mods:titleInfo type="uniform">
+		        <mods:title>
 					<xsl:call-template name="chopPunctuation">
 						<xsl:with-param name="chopString">
 							<xsl:value-of select="."/>
 						</xsl:with-param>
 					</xsl:call-template>
-				</title>
+				</mods:title>
 				<xsl:if test="marc:datafield[@tag!=773]and marc:subfield[@code='g']">
 					<xsl:call-template name="relatedPartNumName"/>
 				</xsl:if>
-			</titleInfo>
+			</mods:titleInfo>
 		</xsl:for-each>
 	</xsl:template>
 
 	<xsl:template name="relatedOriginInfo">
 		<xsl:if test="marc:subfield[@code='b' or @code='d'] or marc:subfield[@code='f']">
-			<originInfo>
+		    <mods:originInfo>
 				<xsl:if test="@tag=775">
 					<xsl:for-each select="marc:subfield[@code='f']">
-						<place>
-							<placeTerm>
+					    <mods:place>
+					        <mods:placeTerm>
 								<xsl:attribute name="type">code</xsl:attribute>
 								<xsl:attribute name="authority">marcgac</xsl:attribute>
 								<xsl:value-of select="."/>
-							</placeTerm>
-						</place>
+							</mods:placeTerm>
+						</mods:place>
 					</xsl:for-each>
 				</xsl:if>
 				<xsl:for-each select="marc:subfield[@code='d']">
-					<publisher>
+				    <mods:publisher>
 						<xsl:value-of select="."/>
-					</publisher>
+					</mods:publisher>
 				</xsl:for-each>
 				<xsl:for-each select="marc:subfield[@code='b']">
-					<edition>
+				    <mods:edition>
 						<xsl:value-of select="."/>
-					</edition>
+					</mods:edition>
 				</xsl:for-each>
-			</originInfo>
+			</mods:originInfo>
 		</xsl:if>
 	</xsl:template>
 
@@ -2272,11 +2300,11 @@ Added Log Comment
 	</xsl:template>
 	<xsl:template name="nameDate">
 		<xsl:for-each select="marc:subfield[@code='d']">
-			<namePart type="date">
+		    <mods:namePart type="date">
 				<xsl:call-template name="chopPunctuation">
 					<xsl:with-param name="chopString" select="."/>
 				</xsl:call-template>
-			</namePart>
+			</mods:namePart>
 		</xsl:for-each>
 	</xsl:template>
 
@@ -2311,7 +2339,7 @@ Added Log Comment
 		<xsl:for-each select="marc:subfield[@code='v' or @code='x' or @code='y' or @code='z']">
 			<xsl:choose>
 				<xsl:when test="@code='v'">
-					<xsl:call-template name="subjectTopic"/>
+					<xsl:call-template name="subjectGenre"/>
 				</xsl:when>
 				<xsl:when test="@code='x'">
 					<xsl:call-template name="subjectTopic"/>
@@ -2343,11 +2371,11 @@ Added Log Comment
 	</xsl:template>
 
 	<xsl:template match="marc:datafield[@tag=600]">
-		<subject>
+	    <mods:subject>
 			<xsl:call-template name="subjectAuthority"/>
-			<name type="personal">
+		    <mods:name type="personal">
 				<xsl:call-template name="termsOfAddress"/>
-				<namePart>
+		        <mods:namePart>
 					<xsl:call-template name="chopPunctuation">
 						<xsl:with-param name="chopString">
 							<xsl:call-template name="subfieldSelect">
@@ -2355,68 +2383,68 @@ Added Log Comment
 							</xsl:call-template>
 						</xsl:with-param>
 					</xsl:call-template>
-				</namePart>
+				</mods:namePart>
 				<xsl:call-template name="nameDate"/>
 				<xsl:call-template name="affiliation"/>
 				<xsl:call-template name="role"/>
-			</name>
+			</mods:name>
 			<xsl:call-template name="subjectAnyOrder"/>
-		</subject>
+		</mods:subject>
 	</xsl:template>
 
 	<xsl:template match="marc:datafield[@tag=610]">
-		<subject>
+	    <mods:subject>
 			<xsl:call-template name="subjectAuthority"/>
-			<name type="corporate">
+	        <mods:name type="corporate">
 				<xsl:for-each select="marc:subfield[@code='a']">
-					<namePart>
+				    <mods:namePart>
 						<xsl:value-of select="."/>
-					</namePart>
+					</mods:namePart>
 				</xsl:for-each>
 				<xsl:for-each select="marc:subfield[@code='b']">
-					<namePart>
+				    <mods:namePart>
 						<xsl:value-of select="."/>
-					</namePart>
+					</mods:namePart>
 				</xsl:for-each>
 				<xsl:if test="marc:subfield[@code='c' or @code='d' or @code='n' or @code='p']">
-					<namePart>
+				    <mods:namePart>
 						<xsl:call-template name="subfieldSelect">
 							<xsl:with-param name="codes">cdnp</xsl:with-param>
 						</xsl:call-template>
-					</namePart>
+					</mods:namePart>
 				</xsl:if>
 				<xsl:call-template name="role"/>
-			</name>
+			</mods:name>
 			<xsl:call-template name="subjectAnyOrder"/>
-		</subject>
+		</mods:subject>
 	</xsl:template>
 
 	<xsl:template match="marc:datafield[@tag=611]">
-		<subject>
+	    <mods:subject>
 			<xsl:call-template name="subjectAuthority"/>
-			<name type="conference">
-				<namePart>
+	        <mods:name type="conference">
+	            <mods:namePart>
 					<xsl:call-template name="subfieldSelect">
 						<xsl:with-param name="codes">abcdeqnp</xsl:with-param>
 					</xsl:call-template>
-				</namePart>
+				</mods:namePart>
 				<xsl:for-each select="marc:subfield[@code='4']">
-					<role>
-						<roleTerm authority="marcrelator" type="code">
+				    <mods:role>
+				        <mods:roleTerm authority="marcrelator" type="code">
 							<xsl:value-of select="."/>
-						</roleTerm>
-					</role>
+						</mods:roleTerm>
+					</mods:role>
 				</xsl:for-each>
-			</name>
+			</mods:name>
 			<xsl:call-template name="subjectAnyOrder"/>
-		</subject>
+		</mods:subject>
 	</xsl:template>
 
 	<xsl:template match="marc:datafield[@tag=630]">
-		<subject>
+	    <mods:subject>
 			<xsl:call-template name="subjectAuthority"/>
-			<titleInfo>
-				<title>
+	        <mods:titleInfo>
+	            <mods:title>
 					<xsl:call-template name="chopPunctuation">
 						<xsl:with-param name="chopString">
 							<xsl:call-template name="subfieldSelect">
@@ -2425,16 +2453,16 @@ Added Log Comment
 						</xsl:with-param>
 					</xsl:call-template>
 					<xsl:call-template name="part"/>
-				</title>
-			</titleInfo>
+				</mods:title>
+			</mods:titleInfo>
 			<xsl:call-template name="subjectAnyOrder"/>
-		</subject>
+		</mods:subject>
 	</xsl:template>
 
 	<xsl:template match="marc:datafield[@tag=650]">
-		<subject>
+	    <mods:subject>
 			<xsl:call-template name="subjectAuthority"/>
-			<topic>
+	        <mods:topic>
 				<xsl:call-template name="chopPunctuation">
 					<xsl:with-param name="chopString">
 						<xsl:call-template name="subfieldSelect">
@@ -2442,57 +2470,57 @@ Added Log Comment
 						</xsl:call-template>
 					</xsl:with-param>
 				</xsl:call-template>
-			</topic>
+			</mods:topic>
 			<xsl:call-template name="subjectAnyOrder"/>
-		</subject>
+		</mods:subject>
 	</xsl:template>
 
 	<xsl:template match="marc:datafield[@tag=651]">
-		<subject>
+	    <mods:subject>
 			<xsl:call-template name="subjectAuthority"/>
 			<xsl:for-each select="marc:subfield[@code='a']">
 
-				<geographic>
+			    <mods:geographic>
 					<xsl:call-template name="chopPunctuation">
 						<xsl:with-param name="chopString" select="."/>
 					</xsl:call-template>
-				</geographic>
+				</mods:geographic>
 			</xsl:for-each>
 
 			<xsl:call-template name="subjectAnyOrder"/>
-		</subject>
+		</mods:subject>
 	</xsl:template>
 
 	<xsl:template match="marc:datafield[@tag=653]">
-		<subject>
+	    <mods:subject>
 			<xsl:for-each select="marc:subfield[@code='a']">
-				<topic>
+			    <mods:topic>
 					<xsl:value-of select="."/>
-				</topic>
+				</mods:topic>
 			</xsl:for-each>
-		</subject>
+		</mods:subject>
 	</xsl:template>
 
 	<xsl:template match="marc:datafield[@tag=656]">
-		<subject>
+	    <mods:subject>
 			<xsl:if test="marc:subfield[@code=2]">
 				<xsl:attribute name="authority">
 					<xsl:value-of select="marc:subfield[@code=2]"/>
 				</xsl:attribute>
 			</xsl:if>
-			<occupation>
+	        <mods:occupation>
 				<xsl:call-template name="chopPunctuation">
 					<xsl:with-param name="chopString">
 						<xsl:value-of select="marc:subfield[@code='a']"/>
 					</xsl:with-param>
 				</xsl:call-template>
-			</occupation>
-		</subject>
+			</mods:occupation>
+		</mods:subject>
 	</xsl:template>
 
 	<xsl:template name="termsOfAddress">
 		<xsl:if test="marc:subfield[@code='b' or @code='c']">
-			<namePart type="termsOfAddress">
+		    <mods:namePart type="termsOfAddress">
 				<xsl:call-template name="chopPunctuation">
 					<xsl:with-param name="chopString">
 						<xsl:call-template name="subfieldSelect">
@@ -2500,7 +2528,7 @@ Added Log Comment
 						</xsl:call-template>
 					</xsl:with-param>
 				</xsl:call-template>
-			</namePart>
+			</mods:namePart>
 		</xsl:if>
 	</xsl:template>
 
@@ -2525,17 +2553,20 @@ Added Log Comment
 
 	<xsl:template name="subtitle">
 		<xsl:if test="marc:subfield[@code='b']">
-			<subTitle>
+		    <mods:subTitle>
 				<xsl:call-template name="chopPunctuation">
 					<xsl:with-param name="chopString">
 						<xsl:value-of select="marc:subfield[@code='b']"/>
-
+					    <xsl:variable name="str"><xsl:value-of select="marc:subfield[@code='b']"/></xsl:variable>
+					    <xsl:variable name="str1"><xsl:value-of select="substring($str,1,1)"></xsl:value-of></xsl:variable>
+					    <xsl:variable name="str2"><xsl:value-of select="substring($str,2,string-length($str)-1)"></xsl:value-of></xsl:variable>
+					    <xsl:value-of select="translate($str1, 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')"></xsl:value-of><xsl:value-of select="$str2"></xsl:value-of>
 						<!--<xsl:call-template name="subfieldSelect">
 							<xsl:with-param name="codes">b</xsl:with-param>									
 						</xsl:call-template>-->
 					</xsl:with-param>
 				</xsl:call-template>
-			</subTitle>
+			</mods:subTitle>
 		</xsl:if>
 	</xsl:template>
 
@@ -2630,32 +2661,32 @@ Added Log Comment
 			</xsl:if>
 		</xsl:variable>
 		<xsl:if test="$level1">
-			<detail level="1">
-				<number>
+		    <mods:detail level="1">
+		        <mods:number>
 					<xsl:value-of select="$level1"/>
-				</number>
-			</detail>
+				</mods:number>
+			</mods:detail>
 		</xsl:if>
 		<xsl:if test="$level2">
-			<detail level="2">
-				<number>
+		    <mods:detail level="2">
+		        <mods:number>
 					<xsl:value-of select="$level2"/>
-				</number>
-			</detail>
+				</mods:number>
+			</mods:detail>
 		</xsl:if>
 		<xsl:if test="$level3">
-			<detail level="3">
-				<number>
+		    <mods:detail level="3">
+		        <mods:number>
 					<xsl:value-of select="$level3"/>
-				</number>
-			</detail>
+				</mods:number>
+			</mods:detail>
 		</xsl:if>
 		<xsl:if test="$page">
-			<extent unit="page">
-				<start>
+		    <mods:extent unit="page">
+		        <mods:start>
 					<xsl:value-of select="$page"/>
-				</start>
-			</extent>
+				</mods:start>
+			</mods:extent>
 		</xsl:if>
 	</xsl:template>
 
@@ -2672,11 +2703,11 @@ Added Log Comment
 				</xsl:call-template>
 			</xsl:when>
 			<xsl:otherwise>
-				<language>
-					<languageTerm authority="iso639-2b" type="code">
+			    <mods:language>
+			        <mods:languageTerm authority="iso639-2b" type="code">
 						<xsl:value-of select="substring($langString,1,3)"/>
-					</languageTerm>
-				</language>
+					</mods:languageTerm>
+				</mods:language>
 				<xsl:call-template name="getLanguage">
 					<xsl:with-param name="langString" select="substring($langString,4,$length)"/>
 					<xsl:with-param name="controlField008-35-37" select="$controlField008-35-37"/>
@@ -2692,11 +2723,11 @@ Added Log Comment
 		<xsl:choose>
 			<xsl:when test="string-length($currentLanguage)=0"/>
 			<xsl:when test="not(contains($usedLanguages, $currentLanguage))">
-				<language>
-					<languageTerm authority="iso639-2b" type="code">
+			    <mods:language>
+			        <mods:languageTerm authority="iso639-2b" type="code">
 						<xsl:value-of select="$currentLanguage"/>
-					</languageTerm>
-				</language>
+					</mods:languageTerm>
+				</mods:language>
 				<xsl:call-template name="isoLanguage">
 					<xsl:with-param name="currentLanguage">
 						<xsl:value-of select="substring($remainingLanguages,1,3)"/>
@@ -2751,11 +2782,11 @@ Added Log Comment
 			<xsl:when test="not($currentLanguage)"/>
 			<xsl:when test="$currentLanguage!=$controlField008-35-37 and $currentLanguage!='rfc3066'">
 				<xsl:if test="not(contains($usedLanguages,$currentLanguage))">
-					<language>
-						<languageTerm authority="rfc3066" type="code">
+				    <mods:language>
+				        <mods:languageTerm authority="rfc3066" type="code">
 							<xsl:value-of select="$currentLanguage"/>
-						</languageTerm>
-					</language>
+						</mods:languageTerm>
+					</mods:language>
 				</xsl:if>
 				<xsl:call-template name="rfcLanguages">
 					<!-- ??? xalan -->
