@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns="http://www.loc.gov/mods/v3" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:marc="http://www.loc.gov/MARC21/slim" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" exclude-result-prefixes="xlink marc">
-	<xsl:include href="MARC21slimUtils.xsl"/>
-	<xsl:output method="xml" indent="yes" encoding="UTF-8"/>
+	
+<xsl:include href="MARC21slimUtils.xsl"/>
+<xsl:output method="xml" indent="yes" encoding="UTF-8"/>
+
 
 <!-- Boston College's customized version of default MarcEdit XSLT for eScholarship@BC; some issues with mapping, should either be updated or use standard LOC mapping instead? -->
 
