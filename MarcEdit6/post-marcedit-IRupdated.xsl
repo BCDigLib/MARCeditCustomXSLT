@@ -18,14 +18,21 @@
                 </xsl:if>
                 <xsl:element name="mods:namePart">
                     <xsl:attribute name='type'>family</xsl:attribute>
-                    <xsl:value-of select="normalize-space(substring-before(mods:namePart,','))"/>
+                    <xsl:value-of select="normalize-space(substring-before(mods:namePart[not(@type)],','))"/>
                 </xsl:element>
                 <xsl:element name="mods:namePart">
                     <xsl:attribute name='type'>given</xsl:attribute>
-                    <xsl:value-of select="normalize-space(substring-after(mods:namePart,','))"/>
+                    <xsl:value-of select="normalize-space(substring-after(mods:namePart[not(@type)],','))"/>
                 </xsl:element> 
+              <xsl:element name="mods:namePart">
+                  <xsl:attribute name='type'>date</xsl:attribute>
+                  <xsl:value-of select="normalize-space(mods:namePart[@type='date'])"/>
+              </xsl:element> 
                 <xsl:element name="mods:displayForm">
-                    <xsl:value-of select="normalize-space(mods:namePart)"/>
+                    <xsl:value-of select="normalize-space(mods:namePart[not(@type)])"/>
+                    <xsl:if test="mods:namePart[@type='date']">
+                        <xsl:text>, </xsl:text><xsl:value-of select="normalize-space(mods:namePart[@type='date'])"/>
+                    </xsl:if>
                 </xsl:element>
                 <xsl:copy-of select="mods:role"/>                    
             </xsl:element>
